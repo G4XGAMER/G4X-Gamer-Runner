@@ -34,7 +34,32 @@ function init(){
  const roadMat=new THREE.MeshStandardMaterial({color:0x17181e,roughness:.9});
  for(let i=0;i<12;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(9,.25,10),roadMat);m.position.set(0,-.25,-i*10+10);m.receiveShadow=true;scene.add(m);road.push(m)}
  for(const x of [-1.45,1.45]){const m=new THREE.Mesh(new THREE.BoxGeometry(.06,.03,120),new THREE.MeshBasicMaterial({color:0xff2439}));m.position.set(x,-.08,-50);scene.add(m)}
- const loader=new GLTFLoader();loader.load(R,g=>{player=g.scene;player.scale.setScalar(1.65);player.position.set(0,0,2);player.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});scene.add(player);mixer=new THREE.AnimationMixer(player);const clip=THREE.AnimationClip.findByName(g.animations,'Running')||g.animations[0];if(clip)runAction=mixer.clipAction(clip);runAction?.play();$('loading').style.display='none';},undefined,e=>{$('loading').textContent='Could not load character. Put this folder on GitHub Pages.';console.error(e)});
+ const loader=new GLTFLoader();
+ $('loading').textContent='Downloading G4X character…';
+ fetch(R,{cache:'no-store'}).then(r=>{
+  if(!r.ok) throw new Error('Character HTTP '+r.status);
+  return r.arrayBuffer();
+ }).then(data=>{
+  $('loading').textContent='Loading G4X character…';
+  loader.parse(data,'./',g=>{
+   player=g.scene;
+   player.scale.setScalar(1.65);
+   player.position.set(0,0,2);
+   player.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+   scene.add(player);
+   mixer=new THREE.AnimationMixer(player);
+   const clip=THREE.AnimationClip.findByName(g.animations,'Running')||g.animations[0];
+   if(clip) runAction=mixer.clipAction(clip);
+   runAction?.play();
+   $('loading').style.display='none';
+  },e=>{
+   $('loading').textContent='G4X character parse error';
+   console.error(e);
+  });
+ }).catch(e=>{
+  $('loading').textContent='G4X character load error: '+e.message;
+  console.error(e);
+ });
  clock=new THREE.Clock();addEvents();animate();
 }
 function addEvents(){
